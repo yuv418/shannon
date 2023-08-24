@@ -21,6 +21,8 @@
 \newcommand{\floor}[1]{\lfloor #1 \rfloor}
 \newcommand{\ceil}[1]{\lceil #1 \rceil}
 \newcommand{\bigceil}[1]{\Bigl \lceil #1 \Bigr \rceil}
+\usepackage{arevmath}
+\setmathfont{Fira Math}
 
 \begin{document}
 
@@ -182,7 +184,7 @@
 
     \begin{frame}{Defining an ECC}
           \begin{itemize}
-                \item Define $\delta$ such that $p + \delta < 0.5$, and $H(p + \epsilon)< H(p) + \delta$.
+                \item Define $\delta$ such that $p + \delta < 0.5$, and $H(p + \delta)< H(p) + \frac{\epsilon}{2}$.
                 \item \textbf{Encoder:} $f: \{0, 1\}^{n(1-H(p)-\epsilon)} \to \{0, 1\}^{n}$. Thus the rate of transmission is correct.
                   \begin{itemize}
                 \item Given an input, $f$ will output a random vector in $\{0, 1\}^{n}$ (there are some problems with this, namely that $f$ could end up not being a function, but I think the probability is low)
@@ -213,7 +215,7 @@
         \item Chernoff bound is decreasing. Note $np + np\epsilon < np + n\epsilon$, so $Pr[\Delta (E, f(\vec{x}) + E) > np + n\epsilon] < Pr[\Delta (E, f(\vec{x}) + E) > np + np\epsilon]$.
         \item We can use the Chernoff bound to know $Pr[\Delta (E, f(\vec{x}) + E) > np(1 + \epsilon)] < e^{-np\epsilon^{2}}$
         \item Thus $Pr[\Delta (E, f(\vec{x}) + E) > n(p + \epsilon)] < e^{-np\epsilon^{2}}$
-        \item For $n$ arbitrarily large, this probability approaches zero, and since $\epsilon > 0$, the probability will be less than epsilon.
+        \item For $n$ arbitrarily large, this probability exponentially decreases, and the probability will be less than epsilon.
           \end{itemize}
         \end{frame}
 
@@ -253,12 +255,49 @@
         \end{frame}
 
       \begin{frame}[fragile]{Case 2: Vector Closer to Output than $\vec{x}$ (cont.)}
-        Let $V_{i}$ represent the event that for $\vec{x_{i}}$, the $i$th vector in $\{0, 1\}&^{1-H(p)-\epsilon}$ , there exists a $\vec{y}$ such that $\Delta(\vec{y}, f(\vec{x_{i}}) + E) < \Delta(\vec{x_{i}}, f(\vec{x_{i}}) + E)$. Already done on previous slide: $V_{i} = Vol(r, \vec{x})2^{-n}$
+        Let $V_{i}$ represent the event that for $\vec{x_{i}}$, the $i$th vector in $\{0, 1\}^{1-H(p)-\epsilon}$ , there exists a $\vec{y}$ such that $\Delta(\vec{y}, f(\vec{x_{i}}) + E) < \Delta(\vec{x_{i}}, f(\vec{x_{i}}) + E)$. Already done on previous slide: $V_{i} = Vol(r, \vec{x})2^{-n}$
         \newline
 
         The probability of the union of these events (there are exactly $2^{n(1-H(p)-\epsilon)}$ events) can be bounded with the union bound.
 
-        \[ Pr\left[\bigcup_{i=0}^{n(1-H(p)-\epsilon)} V_{i}\right] \le \sum_{i=0}^{n(1-H(p)-\epsilon)}V_{i} \]
+        \[ Pr\left[\bigcup_{i=0}^{n(1-H(p)-\epsilon)} V_{i}\right] \le \sum_{i=0}^{n(1-H(p)-\epsilon)}V_{i} = Vol(r, \vec{x})2^{-n}2^{n(1-H(p)-\epsilon)}  \]
+        \end{frame}
+      \begin{frame}[fragile]{Case 2: Vector Closer to Output than $\vec{x}$ (cont.)}
+        \begin{columns}
+          \column{0.5\textwidth}
+          \caption{Volume of a Hamming Ball}
+          \begin{itemize}
+                  \item Found through summing each ``ring'' of the ball
+                  \item Each ``ring'' has $\binom{n}{i}$ vectors in it (for a vector of size $n$)
+            \item Total is $\sum_{i=0}^{n(p+\delta)} \binom{n}{i}$, where $n(p+\delta)$ is the radius
+                  \end{itemize}
+          \column{0.5\textwidth}
+            \caption{Approximation of Hamming Ball Volume}
+            \begin{itemize}
+                    \item Entropy function $H(p)$ is involved here
+                    \item Can use Stirling's approximation to expand and exponent properties to expand $2^{nH(p)}$ and find $\binom{n}{pn} \approx 2^{nH(p)}$.
+                    \end{itemize}
+          \end{columns}
+        \end{frame}
+
+      \begin{frame}[shrink=20]{Case 2: Vector Closer to Output than $\vec{x}$ (cont.)}
+        First simplify bounds for approximation of Hamming ball volume:
+        \begin{align*}
+          \sum_{i=0}^{n(p+\delta)} \binom{n}{i}
+          &\le \binom{n}{p(n+\delta)} \\
+          &\le 2^{nH(p+\delta)} \\
+          &\le 2^{n(H(p)+\frac{\epsilon}{2})}
+                    \end{align*}
+
+                    We need to expand $Vol(r, \vec{x})2^{-n}2^{n(1-H(p)-\epsilon)}$:
+
+                    \begin{align*}
+                        Vol(r, \vec{x})2^{-n}2^{n(1-H(p)-\epsilon)} &\le 2^{n(H(p) + \epsilon) -n + n(1-H(p)-\epsilon) } \\
+                        &\le2^{nH(p) + \frac{n\epsilon}{2} -n + n-nH(p)-n\epsilon } \\
+                        &\le2^{-\frac{n\epsilon}{2}}
+                      \end{align*}
+
+                  Evidently, for $n$ large, the probability of the vector being within the Hamming ball is exponentially small and thus less than $\epsilon$.
         \end{frame}
 
 \end{document}
